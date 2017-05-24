@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.nightang.db.stock.data.ext.StatisticDataMapper">
+
+  <update id="updateStockPriceSequence">
+    update STOCK_PRICE
+	set STOCK_DATE_SEQ = (
+		select count(0) 
+		from STOCK_PRICE s2 
+		where 
+			s2.STOCK_NUM = STOCK_PRICE.STOCK_NUM 
+			and s2.STOCK_DATE &lt;= STOCK_PRICE.STOCK_DATE
+			and IS_VALID = 1
+	)
+	where IS_VALID = 1
+  </update>
+  
+  <update id="updateStockPriceSequenceForNullOnly">
+    update STOCK_PRICE
+	set STOCK_DATE_SEQ = (
+		select count(0) 
+		from STOCK_PRICE s2 
+		where 
+			s2.STOCK_NUM = STOCK_PRICE.STOCK_NUM 
+			and s2.STOCK_DATE &lt;= STOCK_PRICE.STOCK_DATE
+			and IS_VALID = 1
+	)
+	where STOCK_DATE_SEQ is null and IS_VALID = 1
+  </update>
+    
+  <insert id="insertMA" parameterType="map">
+	insert into STOCK_ANALYSIS_DATA (AD_TYPE, STOCK_NUM, STOCK_DATE, AD_VALUE, LAST_MODIFIED_DATE)
+	select 
+		#{adType,jdbcType=VARCHAR} AD_TYPE, 
+		STOCK_NUM, 
+		STOCK_DATE,
+		(
+			select sum(PRICE_CLOSING) / count(0)
+			from STOCK_PRICE
+			where 
+				STOCK_NUM = sp1.STOCK_NUM
+				and STOCK_DATE_SEQ &gt; sp1.STOCK_DATE_SEQ - #{maParam,jdbcType=INTEGER} 
+				and STOCK_DATE_SEQ &lt;= sp1.STOCK_DATE_SEQ
+		) AD_VALUE,
+		datetime('now', 'localtime') as LAST_MODIFIED_DATE
+	from STOCK_PRICE sp1
+	where 
+		STOCK_NUM = #{stockNum,jdbcType=VARCHAR}
+		and STOCK_DATE_SEQ >= #{maParam,jdbcType=INTEGER}	
+  </insert>
+  
+  <insert id="insertAllStockMA" parameterType="map">
+	insert into STOCK_ANALYSIS_DATA (AD_TYPE, STOCK_NUM, STOCK_DATE, AD_VALUE, LAST_MODIFIED_DATE)
+	select 
+		#{adType,jdbcType=VARCHAR} AD_TYPE, 
+		STOCK_NUM, 
+		STOCK_DATE,
+		(
+			select sum(PRICE_CLOSING) / count(0)
+			from STOCK_PRICE
+			where 
+				STOCK_NUM = sp1.STOCK_NUM
+				and STOCK_DATE_SEQ &gt; sp1.STOCK_DATE_SEQ - #{maParam,jdbcType=INTEGER} 
+				and STOCK_DATE_SEQ &lt;= sp1.STOCK_DATE_SEQ
+		) AD_VALUE,
+		datetime('now', 'localtime') as LAST_MODIFIED_DATE
+	from STOCK_PRICE sp1
+	where 
+		STOCK_DATE_SEQ >= #{maParam,jdbcType=INTEGER}
+  </insert>
+  
+  <insert id="insertAllStockMAForNullOnly" parameterType="map">
+	insert into STOCK_ANALYSIS_DATA (AD_TYPE, STOCK_NUM, STOCK_DATE, AD_VALUE, LAST_MODIFIED_DATE)
+	select 
+		#{adType,jdbcType=VARCHAR} AD_TYPE, 
+		sp1.STOCK_NUM, 
+		sp1.STOCK_DATE,
+		(
+			select sum(PRICE_CLOSING) / count(0)
+			from STOCK_PRICE
+			where 
+				STOCK_NUM = sp1.STOCK_NUM
+				and STOCK_DATE_SEQ &gt; sp1.STOCK_DATE_SEQ - #{maParam,jdbcType=INTEGER} 
+				and STOCK_DATE_SEQ &lt;= sp1.STOCK_DATE_SEQ
+		) AD_VALUE,
+		datetime('now', 'localtime') as LAST_MODIFIED_DATE
+	from 
+		STOCK_PRICE sp1
+		left outer join STOCK_ANALYSIS_DATA sa1 on sp1.STOCK_NUM = sa1.STOCK_NUM and sp1.STOCK_DATE = sa1.STOCK_DATE and sa1.AD_TYPE = #{adType,jdbcType=VARCHAR}
+	where 
+		sa1.STOCK_NUM is null
+		and STOCK_DATE_SEQ >= #{maParam,jdbcType=INTEGER}
+  </insert>
+  
+  <delete id="deleteAllStockMA" parameterType="map">
+    delete from STOCK_ANALYSIS_DATA
+	where 
+		AD_TYPE = #{adType,jdbcType=VARCHAR}
+		and STOCK_DATE > datetime('now', 'localtime', #{dayRange,jdbcType=VARCHAR})
+  </delete>
+  
+</mapper>
