@@ -3,10 +3,12 @@ package org.nightang.stock.listfinder;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,7 +39,18 @@ public class HKEXListFinder {
 		buildStockList(map);
 		updateChiName(map);
 		
-		return null;
+		List<StockInfo> list = new ArrayList<StockInfo>();
+		for(Entry<String, StockInfo> entry : map.entrySet()) {
+			list.add(entry.getValue());			
+		}
+		list.sort(new Comparator<StockInfo>() {
+			@Override
+			public int compare(StockInfo arg0, StockInfo arg1) {
+				return arg0.getStockNum().compareTo(arg1.getStockNum());
+			}			
+		});
+		
+		return list;
 	}
 	
 	private void buildStockList(Map<String, StockInfo> map) throws IOException {
@@ -77,9 +90,10 @@ public class HKEXListFinder {
 	}
 	
 	private void updateChiName(Map<String, StockInfo> map) throws IOException {
-		String url = "http://www.hkex.com.hk/eng/market/sec_tradinfo/stockcode/eisdeqty_c.htm";
+		String url = "http://www.hkex.com.hk/chi/market/sec_tradinfo/stockcode/eisdeqty_c.htm";
 		String data = hw.doGet(url);
-		// Same as "buildStockList"
+		//log.info("RAW: " + data);
+		// Extract Format Same as "buildStockList"
 		String pStr = "<td[^>]*>" + "(\\d{5})" + "</td>\\s*"
 				+ "<td[^>]*><a[^>]*>" + "([^<]*)" + "</a></td>\\s*"
 				+ "<td[^>]*>" + "([^<]*)" + "</td>\\s*";
@@ -91,7 +105,7 @@ public class HKEXListFinder {
 			String chiName = mr.group(2);
 			StockInfo stock = map.get(stockNum);
 			if(stock != null) {
-				//stock.setEngName(engName);
+				stock.setChiName(chiName);
 			}
 		}		
 	}

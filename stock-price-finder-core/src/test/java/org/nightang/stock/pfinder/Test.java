@@ -2,9 +2,11 @@ package org.nightang.stock.pfinder;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.nightang.db.stock.model.StockInfo;
 import org.nightang.stock.listfinder.HKEXListFinder;
 import org.nightang.ws.HttpClientWrapper;
 
@@ -28,8 +30,10 @@ public class Test {
 		//pf.close();
 		
 		HKEXListFinder lf = new HKEXListFinder();
-		lf.findStockList();
+		List<StockInfo> list = lf.findStockList();
 		lf.close();
+		
+		log.info(list);
 		
 	}
 
