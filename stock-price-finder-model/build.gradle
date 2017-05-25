@@ -30,9 +30,5 @@ dependencies {
     
     compile 'org.mybatis:mybatis:3.4.4'
     
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.8.11.2'
-    
-    testCompile 'org.mybatis.generator:mybatis-generator-core:1.3.5'
-    
 }
 
