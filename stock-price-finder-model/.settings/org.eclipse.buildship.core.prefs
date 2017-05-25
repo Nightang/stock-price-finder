@@ -1,3 +1,7 @@
 connection.gradle.distribution=GRADLE_DISTRIBUTION(WRAPPER)
+<<<<<<< HEAD
 connection.project.dir=../stock-price-finder-core
+=======
+connection.project.dir=
+>>>>>>> refs/remotes/origin/master
 eclipse.preferences.version=1

@@ -16,6 +16,9 @@ include 'services:webservice'
 */
 
 rootProject.name = 'stock-price-finder-core'
+<<<<<<< HEAD
 
 include ':stock-price-finder-model'
 project(':stock-price-finder-model').projectDir = new File(settingsDir, '../stock-price-finder-model')
+=======
+>>>>>>> refs/remotes/origin/master

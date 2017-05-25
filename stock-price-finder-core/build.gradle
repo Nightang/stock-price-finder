@@ -28,6 +28,7 @@ dependencies {
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     
+<<<<<<< HEAD
     compile project(':stock-price-finder-model')
     
     compile group: 'org.springframework', name: 'spring-core', version: '4.2.9.RELEASE'
@@ -36,5 +37,8 @@ dependencies {
     compile 'org.apache.httpcomponents:httpclient:4.5.3'
     compile 'commons-logging:commons-logging:1.2'
     compile group: 'log4j', name: 'log4j', version: '1.2.16'
+=======
+    compile 'org.apache.httpcomponents:httpclient:4.5.3'
+>>>>>>> refs/remotes/origin/master
 }
 
