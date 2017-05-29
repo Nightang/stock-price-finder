@@ -8,13 +8,23 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.nightang.db.stock.model.StockInfo;
 import org.nightang.stock.listfinder.HKEXListFinder;
+import org.nightang.stock.service.StockListService;
 import org.nightang.ws.HttpClientWrapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
+@Service
 public class Test {
 	
 	private static final Log log = LogFactory.getLog(HttpClientWrapper.class);
-
-	public static void main(String[] args) throws Exception {
+	
+	@Autowired
+	private StockListService stockListService;
+	
+	public void doTest() throws Exception {
 //		HttpClientWrapper hw = new HttpClientWrapper("network.ini", null, null);
 //		
 //		String url = "http://chartdata1.internet.aastocks.com/servlet/iDataServlet/getdaily";
@@ -29,12 +39,18 @@ public class Test {
 		//pf.findPrices("00939");
 		//pf.close();
 		
-		HKEXListFinder lf = new HKEXListFinder();
-		List<StockInfo> list = lf.findStockList();
-		lf.close();
+		//HKEXListFinder lf = new HKEXListFinder();
+		//List<StockInfo> list = lf.findStockList();
+		//lf.close();		
+		//log.info(list);
 		
-		log.info(list);
-		
+		stockListService.updateStockList();
+	}
+	
+	public static void main(String[] args) throws Exception {		
+		ApplicationContext context = (ApplicationContext) new ClassPathXmlApplicationContext("context-application.xml");
+		Test test = (Test) context.getBean("test");
+		test.doTest();		
 	}
 
 }

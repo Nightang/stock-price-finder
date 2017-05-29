@@ -46,7 +46,7 @@ public class AAStockPriceFinder {
 				// Sample: 05/24/2012;5.12;5.17;5.1;5.11;253204.186;1297370282
 				String[] raws = dataSet[i].split(";");
 				StockPrice sp = new StockPrice();
-				sp.setStockNum(stockNum);		
+				sp.setStockNum(stockNum);
 				sp.setStockDate(sdf.parse(raws[0].startsWith("!") ? raws[0].substring(1) : raws[0]));
 				sp.setPriceOpen(Double.parseDouble(raws[1]));
 				sp.setPriceHighest(Double.parseDouble(raws[2]));

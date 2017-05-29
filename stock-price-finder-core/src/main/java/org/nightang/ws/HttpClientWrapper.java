@@ -131,7 +131,7 @@ public class HttpClientWrapper {
 				int status = response.getStatusLine().getStatusCode();
 				
 				HttpEntity entity = response.getEntity();
-				String entityStr = (entity == null)? null: EntityUtils.toString(entity);
+				String entityStr = (entity == null)? null: EntityUtils.toString(entity, "UTF-8");
 				
 				if (status >= 200 && status < 300) {
 					return entityStr;
