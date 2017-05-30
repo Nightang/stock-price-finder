@@ -48,9 +48,9 @@ public class Test {
 			//log.info(list.size());
 		//}
 		
-		//stockListService.updateStockList();
+		stockListService.updateStockList();
 		
-		stockPriceService.updateStockPriceData();
+		//stockPriceService.updateStockPriceData();
 	}
 	
 	public static void main(String[] args) throws Exception {		
