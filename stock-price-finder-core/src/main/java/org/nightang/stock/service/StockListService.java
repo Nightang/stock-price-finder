@@ -27,6 +27,8 @@ public class StockListService {
 	private StockInfoMapper stockInfoMapper;
 
 	public void updateStockList() throws IOException, GeneralSecurityException {
+		long ot = System.currentTimeMillis();
+		log.info("Start Overall Stock List Update Process.");
 
 		// Get OLD & NEW stock list
 		StockInfoExample example = new StockInfoExample();
@@ -35,8 +37,8 @@ public class StockListService {
 		log.info("Original Active Number of Stock : " + oldList.size());
 		
 		List<StockInfo> newList;
-		try (HKEXListFinder lf = new HKEXListFinder()) {
-			newList = lf.findStockList();
+		try (HKEXListFinder finder = new HKEXListFinder()) {
+			newList = finder.findStockList();
 			log.info("Current Active Number of Stock : " + newList.size());
 		}
 
@@ -58,7 +60,8 @@ public class StockListService {
 				
 		// Save into DB
 		saveDB(deleteMap, updateMap, createMap);
-		
+
+		log.info(">>> Overall Stock List Update Process Finished. Duration(ms): " + (System.currentTimeMillis() - ot));
 	}
 
 	@Transactional

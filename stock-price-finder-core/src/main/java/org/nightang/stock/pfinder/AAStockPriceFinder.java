@@ -1,6 +1,7 @@
 package org.nightang.stock.pfinder;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import org.apache.commons.logging.LogFactory;
 import org.nightang.db.stock.model.StockPrice;
 import org.nightang.ws.HttpClientWrapper;
 
-public class AAStockPriceFinder {
+public class AAStockPriceFinder implements AutoCloseable {
 	
 	private static final Log log = LogFactory.getLog(AAStockPriceFinder.class);
 	
@@ -21,12 +22,20 @@ public class AAStockPriceFinder {
 	
 	private SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
 	
-	public AAStockPriceFinder() throws Exception {
+	public AAStockPriceFinder() throws GeneralSecurityException, IOException {
 		hw = new HttpClientWrapper("network.ini", null, null);
 	}
-	
+
+	@Override
 	public void close() throws IOException {
 		hw.close();
+	}
+	
+	public void test() throws IOException {
+		String url = "http://chartdata1.internet.aastocks.com/servlet/iDataServlet/getdaily";
+		url += "?id=00939.HK&type=24&market=1&level=1&period=56&encoding=utf8";
+		String data = hw.doGet(url);
+		log.info("RAW: " + data);
 	}
 	
 	public List<StockPrice> findPrices(String stockNum) throws IOException {
@@ -42,7 +51,7 @@ public class AAStockPriceFinder {
 		log.info("Days Found: " + (dataSet.length - 2));
 		Date now = new Date();
 		for(int i = 2; i < dataSet.length; i++) {
-			try {
+			try { 
 				// Sample: 05/24/2012;5.12;5.17;5.1;5.11;253204.186;1297370282
 				String[] raws = dataSet[i].split(";");
 				StockPrice sp = new StockPrice();
@@ -53,7 +62,11 @@ public class AAStockPriceFinder {
 				sp.setPriceLowest(Double.parseDouble(raws[3]));
 				sp.setPriceClosing(Double.parseDouble(raws[4]));
 				sp.setVolume((long)Double.parseDouble(raws[5])*1000);
-				sp.setIsValid(true);
+				if(sp.getStockDate().getTime() + 24*60*60*1000 >= now.getTime()) {
+					sp.setIsValid(false);
+				} else {
+					sp.setIsValid(true);					
+				}
 				sp.setLastModifiedDate(now);
 				list.add(sp);
 			} catch (ParseException e) {

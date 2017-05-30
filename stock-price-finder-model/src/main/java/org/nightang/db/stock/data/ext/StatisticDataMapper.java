@@ -1,6 +1,9 @@
 package org.nightang.db.stock.data.ext;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
+import org.nightang.db.stock.model.StockPrice;
 
 public interface StatisticDataMapper {
 	
@@ -16,4 +19,6 @@ public interface StatisticDataMapper {
 
     int deleteAllStockMA(@Param("adType") String adType, @Param("dayRange") String dayRange);
 
+    List<StockPrice> getLatestValidStockPriceList();
+    
 }

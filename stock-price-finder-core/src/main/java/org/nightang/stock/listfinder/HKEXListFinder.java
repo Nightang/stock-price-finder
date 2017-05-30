@@ -2,8 +2,6 @@ package org.nightang.stock.listfinder;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -135,12 +133,7 @@ public class HKEXListFinder implements AutoCloseable {
 		Set<String> hsiSet = new HashSet<String>();
 		while (m.find()) {
 			MatchResult mr = m.toMatchResult();	
-			String stockNum = mr.group(1);
-			if(stockNum.length() < 5) {
-				for(int i = stockNum.length(); i < 5; i++) {
-					stockNum = "0" + stockNum;
-				}
-			}
+			String stockNum = paddingStockNum(mr.group(1));
 			if(!hsiSet.contains(stockNum)) {
 				hsiSet.add(stockNum);
 			}
@@ -158,6 +151,57 @@ public class HKEXListFinder implements AutoCloseable {
 	}
 
 	private void updateMarketCap(Map<String, StockInfo> map) throws IOException {
+		int pageCount = 1;
+		int pageSize = -1;
+		int totalCount = -1;
+		
+		for(; pageCount < 60 ; pageCount++) { // 40 is hard code value. Just for avoid inf loop 
+			String url = "https://www.hkex.com.hk/chi/csm/ws/Result.asmx/GetData"
+					+ "?location=companySearch&SearchMethod=2&LangCode=tc&StockCode=&StockName=&Ranking=ByMC&StockType=MB&mkt=hk"
+					+ "&PageNo="+pageCount+"&ATypeSHEx=&AType=&FDD=&FMM=&FYYYY=&TDD=&TMM=&TYYYY=";
+			String data = hw.doGet(url);
+			//log.info("RAW: " + data);
+			
+			// Find Market Cap
+			// Format: {"thead":false,"td":[["2","941 ","中國移動有限公司","HKD 1,763,963"]],"link":"company.htm?LangCode=tc&mkt=hk&StockCode=941"}
+			String pStr = "\"HKD ([0-9,]+)\"]],\"link\":\"company\\.htm\\?LangCode=tc\\&mkt=hk\\&StockCode=(\\d+)\"";
+			Pattern p = Pattern.compile(pStr);
+			Matcher m = p.matcher(data);
+			while (m.find()) {
+				MatchResult mr = m.toMatchResult();	
+				//log.info("FIND2> " + mr.group(1));
+				String marketCapStr = mr.group(1).replace(",", "");
+				String stockNum = paddingStockNum(mr.group(2));
+				StockInfo record = map.get(stockNum);
+				if(record != null) {
+					record.setMktCap(Long.parseLong(marketCapStr)*1000000);
+				}				
+			}
+			
+			if(pageSize == -1) {
+				// Check Page End
+				// Format: "PageSize":40,"TotalCount":1762,
+				pStr = "\"PageSize\":(\\d+),\"TotalCount\":(\\d+)";
+				p = Pattern.compile(pStr);
+				m = p.matcher(data);
+				while (m.find()) {
+					MatchResult mr = m.toMatchResult();	
+					pageSize = Integer.parseInt(mr.group(1));
+					totalCount = Integer.parseInt(mr.group(2));
+					log.info("pageSize: " + pageSize + "|totalCount:" + totalCount);
+				}
+			} else {
+				log.info("Load> " + (pageCount*pageSize) + "/" + totalCount);
+				if(pageCount*pageSize >= totalCount) {
+					break;
+				}
+			}
+		}
+		
+	}
+
+	/*
+	private void updateMarketCapFromHKEXProfile(Map<String, StockInfo> map) throws IOException {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		for(Entry<String, StockInfo> entry : map.entrySet()) {
 			StockInfo stock = entry.getValue();
@@ -201,5 +245,17 @@ public class HKEXListFinder implements AutoCloseable {
 		}
 				
 	}
+	*/
 	
+	private String paddingStockNum(String str) {
+		String num = str;
+		if(num != null) {
+			if(num.length() < 5) {
+				for(int i = num.length(); i < 5; i++) {
+					num = "0" + num;
+				}
+			}
+		}
+		return num;
+	}
 }

@@ -99,4 +99,15 @@
 		and STOCK_DATE > datetime('now', 'localtime', #{dayRange,jdbcType=VARCHAR})
   </delete>
   
+  <select id="getLatestValidStockPriceList" resultMap="org.nightang.db.stock.data.StockPriceMapper.BaseResultMap">
+  	select sp.* 
+  	from STOCK_PRICE sp
+  	inner join (
+		select STOCK_NUM, max(STOCK_DATE) as STOCK_DATE
+		from STOCK_PRICE
+		where IS_VALID = 1
+		group by STOCK_NUM
+	) tmp on sp.STOCK_NUM = tmp.STOCK_NUM and sp.STOCK_DATE = tmp.STOCK_DATE
+  </select>
+  
 </mapper>

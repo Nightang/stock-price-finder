@@ -9,6 +9,7 @@ import org.apache.commons.logging.LogFactory;
 import org.nightang.db.stock.model.StockInfo;
 import org.nightang.stock.listfinder.HKEXListFinder;
 import org.nightang.stock.service.StockListService;
+import org.nightang.stock.service.StockPriceService;
 import org.nightang.ws.HttpClientWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -23,6 +24,9 @@ public class Test {
 	
 	@Autowired
 	private StockListService stockListService;
+
+	@Autowired
+	private StockPriceService stockPriceService;
 	
 	public void doTest() throws Exception {
 //		HttpClientWrapper hw = new HttpClientWrapper("network.ini", null, null);
@@ -34,17 +38,19 @@ public class Test {
 //		hw.close();
 //		
 //		log.info(">> " + str);
+
+		//try(AAStockPriceFinder finder = new AAStockPriceFinder()) {
+		//	finder.test();
+		//}
 		
-		//AAStockPriceFinder pf = new AAStockPriceFinder();		
-		//pf.findPrices("00939");
-		//pf.close();
+		//try(HKEXListFinder finder = new HKEXListFinder()) {
+			//List<StockInfo> list = finder.findStockList();
+			//log.info(list.size());
+		//}
 		
-		//HKEXListFinder lf = new HKEXListFinder();
-		//List<StockInfo> list = lf.findStockList();
-		//lf.close();		
-		//log.info(list);
+		//stockListService.updateStockList();
 		
-		stockListService.updateStockList();
+		stockPriceService.updateStockPriceData();
 	}
 	
 	public static void main(String[] args) throws Exception {		
