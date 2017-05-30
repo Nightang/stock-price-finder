@@ -48,7 +48,6 @@ public class AAStockPriceFinder implements AutoCloseable {
 		String[] dataSet = data.split("\\|");
 		
 		// History data start from "Index-2", "Index-0" is stock name, "Index-1" is real-time price
-		log.info("Days Found: " + (dataSet.length - 2));
 		Date now = new Date();
 		for(int i = 2; i < dataSet.length; i++) {
 			try { 
@@ -62,7 +61,7 @@ public class AAStockPriceFinder implements AutoCloseable {
 				sp.setPriceLowest(Double.parseDouble(raws[3]));
 				sp.setPriceClosing(Double.parseDouble(raws[4]));
 				sp.setVolume((long)Double.parseDouble(raws[5])*1000);
-				if(sp.getStockDate().getTime() + 24*60*60*1000 >= now.getTime()) {
+				if(sp.getStockDate().getTime() + 20*60*60*1000 >= now.getTime()) {
 					sp.setIsValid(false);
 				} else {
 					sp.setIsValid(true);					
@@ -79,7 +78,7 @@ public class AAStockPriceFinder implements AutoCloseable {
 				return arg0.getStockDate().compareTo(arg1.getStockDate());
 			}
 		});
-		log.info("Fail Number: " + ((dataSet.length - 2) - list.size()));
+		log.info("Days Found: " + (dataSet.length - 2) + " (Fail Parse: " + ((dataSet.length - 2) - list.size()) + ")");
 		
 		return list;
 	}

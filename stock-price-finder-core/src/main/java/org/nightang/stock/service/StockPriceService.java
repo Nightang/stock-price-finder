@@ -7,23 +7,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import org.nightang.db.stock.data.StockAnalysisDataMapper;
 import org.nightang.db.stock.data.StockInfoMapper;
-import org.nightang.db.stock.data.StockPriceMapper;
 import org.nightang.db.stock.data.ext.StatisticDataMapper;
-import org.nightang.db.stock.model.StockAnalysisDataExample;
 import org.nightang.db.stock.model.StockInfo;
 import org.nightang.db.stock.model.StockInfoExample;
 import org.nightang.db.stock.model.StockPrice;
-import org.nightang.db.stock.model.StockPriceExample;
 import org.nightang.stock.pfinder.AAStockPriceFinder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StockPriceService {
@@ -34,13 +28,10 @@ public class StockPriceService {
 	private StockInfoMapper stockInfoMapper;
 
 	@Autowired
-	private StockPriceMapper stockPriceMapper;
-
-	@Autowired
-	private StockAnalysisDataMapper stockAnalysisDataMapper;
-
-	@Autowired
 	private StatisticDataMapper statisticDataMapper;
+
+	@Autowired
+	private StockBO stockBO;
 
 	public void updateStockPriceData() throws GeneralSecurityException, IOException {
 		long ot = System.currentTimeMillis();
@@ -53,6 +44,7 @@ public class StockPriceService {
 		log.info("Active Number of Stock : " + stockList.size());
 		
 		// Get Latest Valid Stock Price Date
+		long t = System.currentTimeMillis();
 		List<StockPrice> oldPriceList = statisticDataMapper.getLatestValidStockPriceList();
 		Map<String, Date> checkOldDateMap = new HashMap<String, Date>();
 		Map<String, Integer> checkDateSeqMap = new HashMap<String, Integer>();
@@ -60,9 +52,10 @@ public class StockPriceService {
 			checkOldDateMap.put(oldPrice.getStockNum(), oldPrice.getStockDate());
 			checkDateSeqMap.put(oldPrice.getStockNum(), oldPrice.getStockDateSeq());
 		}
+		log.info("Get Latest Valid Stock Price List, Duration(ms): " + (System.currentTimeMillis() - t));
 		
 		// Save DB - Delete Invalid Record
-		deleteStockPriceByDateMap(checkOldDateMap);
+		stockBO.deleteStockPriceByDateMap(checkOldDateMap);
 		
 		// Find New Price
 		int totalCount = stockList.size();
@@ -75,7 +68,7 @@ public class StockPriceService {
 				String stockNum = stock.getStockNum();
 				log.info("Update Stock Price (" + (count++) + "/" + totalCount + "): " + stockNum);
 				try {
-					long t = System.currentTimeMillis();
+					t = System.currentTimeMillis();
 					List<StockPrice> newList = finder.findPrices(stockNum);
 					Date oldPriceDate = checkOldDateMap.get(stockNum);
 					for(StockPrice newPrice : newList) {
@@ -95,8 +88,11 @@ public class StockPriceService {
 					if(packageCount++ >= 50) {
 						packageCount = 1;
 						// Save DB	- Insert Record.
-						insertStockPrice(insertList);
-						insertList = new ArrayList<StockPrice>();
+						try {
+							stockBO.insertStockPrice(insertList);
+						} finally {
+							insertList = new ArrayList<StockPrice>();
+						}
 					}
 				} catch(Exception e) {
 					log.error("Fail to update stock price, stockNum: " + stockNum, e);
@@ -104,52 +100,17 @@ public class StockPriceService {
 			}
 		}
 		// Flush Last Record
-		insertStockPrice(insertList);
+		stockBO.insertStockPrice(insertList);
 
 		// Update Analysis Data
 		log.info("Start Update Analysis Data.");
-		updateAllStockMA(10);
-		updateAllStockMA(20);
-		updateAllStockMA(50);
-		updateAllStockMA(100);
-		updateAllStockMA(250);
+		stockBO.updateAllStockMA(10);
+		stockBO.updateAllStockMA(20);
+		stockBO.updateAllStockMA(50);
+		stockBO.updateAllStockMA(100);
+		stockBO.updateAllStockMA(250);
 		
 		log.info(">>> Overall Stock Price Update Process Finished. Duration(ms): " + (System.currentTimeMillis() - ot));
-	}
-
-	@Transactional
-	private void deleteStockPriceByDateMap(Map<String, Date> stockNumVsDateMap) {
-		long t = System.currentTimeMillis();
-		int deleteCount = 0;
-		for(Entry<String, Date> entry : stockNumVsDateMap.entrySet()) {
-			// Delete Stock Price
-			StockPriceExample spExample = new StockPriceExample();
-			spExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
-			deleteCount += stockPriceMapper.deleteByExample(spExample);
-			// Delete Stock Price Analyst Data
-			StockAnalysisDataExample saExample = new StockAnalysisDataExample();
-			saExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
-			stockAnalysisDataMapper.deleteByExample(saExample);
-		}
-		log.info("Number of Stock Price Deleted: " + deleteCount + ", Duration(ms): " + (System.currentTimeMillis() - t));
-	}
-
-	@Transactional
-	private void insertStockPrice(List<StockPrice> insertList) {
-		long t = System.currentTimeMillis();
-		log.info("Number of Stock Price Inserted: " + insertList.size());
-		for(StockPrice record : insertList) {
-			stockPriceMapper.insert(record);
-		}
-		log.info("Duration(ms): " + (System.currentTimeMillis() - t));
-	}
-
-	@Transactional
-	public void updateAllStockMA(int maParam) {
-		long t = System.currentTimeMillis();
-		String adType = "MA" + maParam;
-		int rs = statisticDataMapper.insertAllStockMAForNullOnly(adType, maParam);
-		log.info("Updated Statistic Data ("+adType+"), Number of Record: " + rs + ", Duration(ms): " + (System.currentTimeMillis() - t));
 	}
 	
 }

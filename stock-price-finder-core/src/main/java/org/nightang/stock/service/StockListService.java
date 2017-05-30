@@ -30,12 +30,20 @@ public class StockListService {
 		long ot = System.currentTimeMillis();
 		log.info("Start Overall Stock List Update Process.");
 
-		// Get OLD & NEW stock list
+		// Get OLD stock list
 		StockInfoExample example = new StockInfoExample();
 		example.createCriteria().andActiveEqualTo(true);
 		List<StockInfo> oldList = stockInfoMapper.selectByExample(example);
 		log.info("Original Active Number of Stock : " + oldList.size());
 		
+		// Check time between now and last update date, if more than 12 hour, update the list
+		//StockInfo test = oldList.get(0);
+		//if(test.getLastModifiedDate().getTime() + 12*60*60*1000 > (new Date()).getTime()) {
+		//	log.info("Stock List is up to date. No Update Required. Last Update Time: " + test.getLastModifiedDate());
+		//	return;
+		//}
+		
+		// Get NEW stock list
 		List<StockInfo> newList;
 		try (HKEXListFinder finder = new HKEXListFinder()) {
 			newList = finder.findStockList();
