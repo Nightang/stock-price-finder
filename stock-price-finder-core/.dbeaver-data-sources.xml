@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<data-sources>
-	<data-source id="sqlite_jdbc-15c53172b89-1759004637ae99ea" provider="generic" driver="sqlite_jdbc" name="SQLite - database.db" save-password="true" show-system-objects="true" read-only="false">
-		<connection server="" database="C:\Users\tang_ym\git\stock-price-finder\stock-price-finder-core\database.db" url="jdbc:sqlite:C:\Users\tang_ym\git\stock-price-finder\stock-price-finder-core\database.db" type="dev"/>
-	</data-source>
-</data-sources>
