@@ -1,8 +1,6 @@
 /.gradle/
-<<<<<<< HEAD
 /bin/
 /build/
-SDM.db
-=======
->>>>>>> refs/remotes/origin/master
 /database.db
+/Scripts/
+.dbeaver-data-sources.xml
