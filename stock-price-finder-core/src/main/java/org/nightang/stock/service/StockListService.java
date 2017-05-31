@@ -37,11 +37,11 @@ public class StockListService {
 		log.info("Original Active Number of Stock : " + oldList.size());
 		
 		// Check time between now and last update date, if more than 12 hour, update the list
-		//StockInfo test = oldList.get(0);
-		//if(test.getLastModifiedDate().getTime() + 12*60*60*1000 > (new Date()).getTime()) {
-		//	log.info("Stock List is up to date. No Update Required. Last Update Time: " + test.getLastModifiedDate());
-		//	return;
-		//}
+		StockInfo test = oldList.size() > 0 ? oldList.get(0) : null;
+		if(test != null && test.getLastModifiedDate().getTime() + 12*60*60*1000 > (new Date()).getTime()) {
+			log.info("Stock List is up to date. No Update Required. Last Update Time: " + test.getLastModifiedDate());
+			return;
+		}
 		
 		// Get NEW stock list
 		List<StockInfo> newList;
