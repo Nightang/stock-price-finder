@@ -3,6 +3,8 @@ package org.nightang.stock;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.nightang.stock.service.StockListService;
 import org.nightang.stock.service.StockPriceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class StockPriceFinderLauncher {
+	
+	private static final Log log = LogFactory.getLog(StockPriceFinderLauncher.class);
 
 	@Autowired
 	private StockListService stockListService;
@@ -25,9 +29,13 @@ public class StockPriceFinderLauncher {
 	}
 
 	public static void main(String[] args) throws IOException, GeneralSecurityException {
-		ApplicationContext context = (ApplicationContext) new ClassPathXmlApplicationContext("context-application.xml");
-		StockPriceFinderLauncher launcher = (StockPriceFinderLauncher) context.getBean("stockPriceFinderLauncher");
-		launcher.doTask();		
+		try {
+			ApplicationContext context = (ApplicationContext) new ClassPathXmlApplicationContext("context-application.xml");
+			StockPriceFinderLauncher launcher = (StockPriceFinderLauncher) context.getBean("stockPriceFinderLauncher");
+			launcher.doTask();
+		} catch(Exception e) {
+			log.error(e, e);
+		}
 	}
 
 }

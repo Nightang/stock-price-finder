@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -16,7 +15,6 @@ import org.nightang.db.stock.model.StockInfoExample;
 import org.nightang.stock.listfinder.HKEXListFinder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StockListService {
@@ -25,6 +23,9 @@ public class StockListService {
 	
 	@Autowired
 	private StockInfoMapper stockInfoMapper;
+
+	@Autowired
+	private StockBO stockBO;
 
 	public void updateStockList() throws IOException, GeneralSecurityException {
 		long ot = System.currentTimeMillis();
@@ -67,59 +68,9 @@ public class StockListService {
 		}
 				
 		// Save into DB
-		saveDB(deleteMap, updateMap, createMap);
+		stockBO.saveStockList(deleteMap, updateMap, createMap);
 
 		log.info(">>> Overall Stock List Update Process Finished. Duration(ms): " + (System.currentTimeMillis() - ot));
 	}
-
-	@Transactional
-	private void saveDB(Map<String, StockInfo> deleteMap, Map<String, StockInfo> updateMap, 
-			Map<String, StockInfo> createMap) {
-		// Save into DB
-		Date now = new Date();
-
-		// Insert
-		long t = System.currentTimeMillis();
-		log.info("Created Number of Stock : " + createMap.size());
-		if (createMap.size() > 0) {
-			for (Entry<String, StockInfo> entry : createMap.entrySet()) {
-				StockInfo record = entry.getValue();
-				record.setLastModifiedDate(now);
-				stockInfoMapper.insert(record);
-			}
-		}
-		log.info("Insert Duration(ms): " + (System.currentTimeMillis() - t));
-
-		// Update
-		t = System.currentTimeMillis();
-		log.info("Updated Number of Stock : " + updateMap.size());
-		if (updateMap.size() > 0) {
-			for (Entry<String, StockInfo> entry : updateMap.entrySet()) {
-				StockInfo record = entry.getValue();
-				record.setLastModifiedDate(now);
-				StockInfoExample example = new StockInfoExample();
-				example.createCriteria().andStockNumEqualTo(
-						record.getStockNum());
-				stockInfoMapper.updateByExampleSelective(record, example);
-			}
-		}
-		log.info("Update Duration(ms): " + (System.currentTimeMillis() - t));
-
-		// Delete (Just set to inactive, not actual delete)
-		t = System.currentTimeMillis();
-		log.info("Deleted Number of Stock : " + deleteMap.size());
-		if (deleteMap.size() > 0) {
-			for (Entry<String, StockInfo> entry : deleteMap.entrySet()) {
-				StockInfo record = entry.getValue();
-				record.setActive(false);
-				record.setLastModifiedDate(now);
-				StockInfoExample example = new StockInfoExample();
-				example.createCriteria().andStockNumEqualTo(record.getStockNum());
-				stockInfoMapper.updateByExampleSelective(record, example);
-			}
-		}
-		log.info("Deleted Duration(ms): " + (System.currentTimeMillis() - t));
-	}
-	
 	
 }

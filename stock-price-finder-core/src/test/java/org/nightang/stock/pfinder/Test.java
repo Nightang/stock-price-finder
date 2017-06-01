@@ -37,7 +37,7 @@ public class Test {
 //		String str = hw.doGet(url);
 //		hw.close();
 //		
-//		log.info(">> " + str);
+		log.info("Test !!!");
 
 		//try(AAStockPriceFinder finder = new AAStockPriceFinder()) {
 		//	finder.test();
@@ -50,7 +50,7 @@ public class Test {
 		
 		//stockListService.updateStockList();
 		
-		stockPriceService.updateStockPriceData();
+		//stockPriceService.updateStockPriceData();
 	}
 	
 	public static void main(String[] args) throws Exception {		
