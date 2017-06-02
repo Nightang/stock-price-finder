@@ -2,12 +2,15 @@ package org.nightang.stock.pfinder;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.nightang.db.stock.model.StockInfo;
 import org.nightang.stock.listfinder.HKEXListFinder;
+import org.nightang.stock.service.StockBO;
 import org.nightang.stock.service.StockListService;
 import org.nightang.stock.service.StockPriceService;
 import org.nightang.ws.HttpClientWrapper;
@@ -27,6 +30,9 @@ public class Test {
 
 	@Autowired
 	private StockPriceService stockPriceService;
+
+	@Autowired
+	private StockBO stockBO;
 	
 	public void doTest() throws Exception {
 //		HttpClientWrapper hw = new HttpClientWrapper("network.ini", null, null);
@@ -37,7 +43,7 @@ public class Test {
 //		String str = hw.doGet(url);
 //		hw.close();
 //		
-		log.info("Test !!!");
+		//log.info("Test !!!");
 
 		//try(AAStockPriceFinder finder = new AAStockPriceFinder()) {
 		//	finder.test();
@@ -48,9 +54,13 @@ public class Test {
 			//log.info(list.size());
 		//}
 		
-		//stockListService.updateStockList();
+		stockListService.updateStockList();
 		
-		//stockPriceService.updateStockPriceData();
+		stockPriceService.updateStockPriceData();
+		
+		//stockBO.housekeepStockDataMA();
+
+		//stockBO.housekeepStockPrice();
 	}
 	
 	public static void main(String[] args) throws Exception {		

@@ -13,16 +13,24 @@ import org.nightang.db.stock.data.ext.StatisticDataMapper;
 import org.nightang.db.stock.model.StockInfo;
 import org.nightang.db.stock.model.StockInfoExample;
 import org.nightang.db.stock.model.StockPrice;
+import org.nightang.stock.CommonUtils;
 import org.nightang.stock.pfinder.AAStockPriceFinder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-
+@Scope
 @Service
 public class StockPriceService {
 
 	private static final Log log = LogFactory.getLog(StockPriceService.class);
+
+	private CommonUtils commonUtils = new CommonUtils();
+	
+	@Value("${retention.days.stock.price}")
+	private int retentionDaysForStockPrice;
 
 	@Autowired
 	private StockInfoMapper stockInfoMapper;
@@ -54,13 +62,14 @@ public class StockPriceService {
 		}
 		log.info("Get Latest Valid Stock Price List, Duration(ms): " + (System.currentTimeMillis() - t));
 		
-		// Save DB - Delete Invalid Record
-		stockBO.deleteStockPriceByDateMap(checkOldDateMap);
+		// Save DB - Delete Invalid Record (Date after latest valid date)
+		stockBO.deleteStockDataAfterDateMap(checkOldDateMap);
 		
 		// Find New Price
 		int totalCount = stockList.size();
 		int count = 1;
 		int packageCount = 1;
+		Date effectiveDate = commonUtils.getDateBeforeToday(retentionDaysForStockPrice);
 		List<StockPrice> insertList = new ArrayList<StockPrice>();
 		try(AAStockPriceFinder finder = new AAStockPriceFinder()) {
 			for(StockInfo stock : stockList) {
@@ -72,15 +81,18 @@ public class StockPriceService {
 					List<StockPrice> newList = finder.findPrices(stockNum);
 					Date oldPriceDate = checkOldDateMap.get(stockNum);
 					for(StockPrice newPrice : newList) {
-						// Only Insert New Stock Price
-	
-						if(oldPriceDate == null || newPrice.getStockDate().after(oldPriceDate)) {
-							Integer stockDateSeq = checkDateSeqMap.get(stockNum);
-							if(stockDateSeq == null) stockDateSeq = 1;
-							newPrice.setStockDateSeq(stockDateSeq++);
-							insertList.add(newPrice);
-							checkDateSeqMap.put(stockNum, stockDateSeq);
-							updateCount++;
+						// Insert New Stock Price						
+						// Condition 1: Price Date is after retention period (Today - retention days)
+						if(newPrice.getStockDate().after(effectiveDate)) {							
+							// Condition 2: Price Date is after latest valid date
+							if(oldPriceDate == null || newPrice.getStockDate().after(oldPriceDate)) {
+								Integer stockDateSeq = checkDateSeqMap.get(stockNum);
+								if(stockDateSeq == null) stockDateSeq = 1;
+								newPrice.setStockDateSeq(stockDateSeq++);
+								insertList.add(newPrice);
+								checkDateSeqMap.put(stockNum, stockDateSeq);
+								updateCount++;
+							}
 						}
 					}
 					log.info("StockNum: " + stockNum + ", Number of Update: " + updateCount + ", Duration(ms): " + (System.currentTimeMillis() - t));

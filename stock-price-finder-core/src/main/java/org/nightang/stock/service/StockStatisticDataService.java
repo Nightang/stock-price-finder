@@ -66,6 +66,7 @@ public class StockStatisticDataService {
 		log.info("Updated Record Num: " + rs);	
 	}
 	
+	/*
 	public void updateAllStockMA(int maParam, int dayRange) {
 		log.info("Delete MA-" + maParam + " for All Stock, Range: " + dayRange);
 		String adType = "MA" + maParam;
@@ -86,5 +87,6 @@ public class StockStatisticDataService {
 		int rs2 = statisticDataMapper.insertAllStockMAForNullOnly(adType, maParam);
 		log.info("Updated Record Num: " + rs2);
 	}
+	*/
 	
 }

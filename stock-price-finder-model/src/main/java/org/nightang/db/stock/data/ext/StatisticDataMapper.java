@@ -15,9 +15,13 @@ public interface StatisticDataMapper {
 
     int insertAllStockMA(@Param("adType") String adType, @Param("maParam") int maParam);
 
-    int insertAllStockMAForNullOnly(@Param("adType") String adType, @Param("maParam") int maParam);
+    int insertAllStockMAForNullOnly(@Param("adType") String adType, @Param("maParam") int maParam, @Param("effectiveDateStr") String effectiveDateStr);
 
     int deleteAllStockMA(@Param("adType") String adType, @Param("dayRange") String dayRange);
+
+    int deleteStockPriceBeforeDate(@Param("dateStr") String dateStr);
+    
+    int deleteStockMABeforeDate(@Param("dateStr") String dateStr);
 
     List<StockPrice> getLatestValidStockPriceList();
     

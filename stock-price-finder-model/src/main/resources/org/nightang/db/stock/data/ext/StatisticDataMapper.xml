@@ -88,7 +88,8 @@
 		STOCK_PRICE sp1
 		left outer join STOCK_ANALYSIS_DATA sa1 on sp1.STOCK_NUM = sa1.STOCK_NUM and sp1.STOCK_DATE = sa1.STOCK_DATE and sa1.AD_TYPE = #{adType,jdbcType=VARCHAR}
 	where 
-		sa1.STOCK_NUM is null
+		sp1.STOCK_DATE > #{effectiveDateStr,jdbcType=VARCHAR}
+		and sa1.STOCK_NUM is null
 		and STOCK_DATE_SEQ >= #{maParam,jdbcType=INTEGER}
   </insert>
   
@@ -97,6 +98,18 @@
 	where 
 		AD_TYPE = #{adType,jdbcType=VARCHAR}
 		and STOCK_DATE > datetime('now', 'localtime', #{dayRange,jdbcType=VARCHAR})
+  </delete>
+  
+  <delete id="deleteStockPriceBeforeDate" parameterType="map">
+    delete from STOCK_PRICE
+	where 
+		STOCK_DATE &lt;= #{dateStr,jdbcType=VARCHAR}
+  </delete>
+  
+  <delete id="deleteStockMABeforeDate" parameterType="map">
+    delete from STOCK_ANALYSIS_DATA
+	where 
+		STOCK_DATE &lt;= #{dateStr,jdbcType=VARCHAR}
   </delete>
   
   <select id="getLatestValidStockPriceList" resultMap="org.nightang.db.stock.data.StockPriceMapper.BaseResultMap">

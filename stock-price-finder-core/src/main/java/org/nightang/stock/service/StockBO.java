@@ -16,7 +16,9 @@ import org.nightang.db.stock.model.StockInfo;
 import org.nightang.db.stock.model.StockInfoExample;
 import org.nightang.db.stock.model.StockPrice;
 import org.nightang.db.stock.model.StockPriceExample;
+import org.nightang.stock.CommonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class StockBO {
 
 	private static final Log log = LogFactory.getLog(StockPriceService.class);
+	
+	private CommonUtils commonUtils = new CommonUtils();
+
+	@Value("${retention.days.stock.price}")
+	private int retentionDaysForStockPrice;
+
+	@Value("${retention.days.stock.analysis.ma}")
+	private int retentionDaysForStockDataMA;
 
 	@Autowired
 	private StockInfoMapper stockInfoMapper;
@@ -39,15 +49,17 @@ public class StockBO {
 	private StockAnalysisDataMapper stockAnalysisDataMapper;
 	
 	@Transactional
-	public void deleteStockPriceByDateMap(Map<String, Date> stockNumVsDateMap) {
+	public void deleteStockDataAfterDateMap(Map<String, Date> stockNumVsDateMap) {
 		long t = System.currentTimeMillis();
 		int deleteCount = 0;
 		for(Entry<String, Date> entry : stockNumVsDateMap.entrySet()) {
-			// Delete Stock Price
+			
+			// Delete Stock Price after the date in the map
 			StockPriceExample spExample = new StockPriceExample();
 			spExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
 			deleteCount += stockPriceMapper.deleteByExample(spExample);
-			// Delete Stock Price Analyst Data
+			
+			// Delete Stock Analyst Data after the date in the map
 			StockAnalysisDataExample saExample = new StockAnalysisDataExample();
 			saExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
 			stockAnalysisDataMapper.deleteByExample(saExample);
@@ -69,8 +81,30 @@ public class StockBO {
 	public void updateAllStockMA(int maParam) {
 		long t = System.currentTimeMillis();
 		String adType = "MA" + maParam;
-		int rs = statisticDataMapper.insertAllStockMAForNullOnly(adType, maParam);
-		log.info("Updated Statistic Data ("+adType+"), Number of Record: " + rs + ", Duration(ms): " + (System.currentTimeMillis() - t));
+		String effectiveDateStr = commonUtils.getDateDBStringBeforeToday(retentionDaysForStockDataMA);
+		int rs = statisticDataMapper.insertAllStockMAForNullOnly(adType, maParam, effectiveDateStr);
+		log.info("("+adType+") Inserted Number: " + rs + ", Duration(ms): " + (System.currentTimeMillis() - t));
+	}
+
+	@Transactional
+	public void housekeepStockDataMA() {
+		long t = System.currentTimeMillis();
+		String dateStr = commonUtils.getDateDBStringBeforeToday(retentionDaysForStockDataMA);
+		log.info("Deleted MA Data before: " + dateStr);
+		int rs = statisticDataMapper.deleteStockMABeforeDate(dateStr);
+		log.info("Deleted Number: " + rs + ", Duration(ms): " + (System.currentTimeMillis() - t));
+	}
+	
+	@Transactional
+	public void housekeepStockPrice() {
+		long t = System.currentTimeMillis();
+		String dateStr = commonUtils.getDateDBStringBeforeToday(retentionDaysForStockPrice);
+		log.info("Deleted Price Record before: " + dateStr);
+		int rs = statisticDataMapper.deleteStockPriceBeforeDate(dateStr);
+		log.info("Deleted Number: " + rs + ", Duration(ms): " + (System.currentTimeMillis() - t));
+		t = System.currentTimeMillis();		
+		statisticDataMapper.updateStockPriceSequence();
+		log.info("Update Stock Price Sequence, Duration(ms): " + (System.currentTimeMillis() - t));
 	}
 	
 	@Transactional
