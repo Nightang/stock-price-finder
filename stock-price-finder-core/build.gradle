@@ -75,7 +75,8 @@ jar {
 task copyDefaultConfig(type: Copy) {
 	def docs = file("$buildDir/config_dist")
     // Copy 
-    from "config_dist/database.db"
+	from "config_dist/database.db"
+    from "config_dist/app_config.ini"
     from "config_dist/network.ini"
     from "config_dist/run.bat"
     // Determine the destination directory later
