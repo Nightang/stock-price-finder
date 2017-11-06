@@ -32,6 +32,12 @@ public class StockPriceService {
 	@Value("${retention.days.stock.price}")
 	private int retentionDaysForStockPrice;
 
+	@Value("${enable.debug.filter}")
+	private String enableDebugFilter;
+
+	@Value("${enable.debug.filter.stock.num}")
+	private String debugStockNum;
+
 	@Autowired
 	private StockInfoMapper stockInfoMapper;
 
@@ -46,8 +52,13 @@ public class StockPriceService {
 		log.info("Start Overall Stock Price Update Process.");
 		
 		// Get Active Stock List
-		StockInfoExample example = new StockInfoExample();
-		example.createCriteria().andActiveEqualTo(true);
+		StockInfoExample example = new StockInfoExample();		
+		if("TRUE".equalsIgnoreCase(enableDebugFilter)) {
+			log.info("Debug Mode is Turned On, Trace Stock: " + debugStockNum);
+			example.createCriteria().andStockNumEqualTo(debugStockNum);
+		} else {
+			example.createCriteria().andActiveEqualTo(true);
+		}
 		List<StockInfo> stockList = stockInfoMapper.selectByExample(example);
 		log.info("Active Number of Stock : " + stockList.size());
 		
@@ -57,6 +68,9 @@ public class StockPriceService {
 		Map<String, Date> checkOldDateMap = new HashMap<String, Date>();
 		Map<String, Integer> checkDateSeqMap = new HashMap<String, Integer>();
 		for(StockPrice oldPrice : oldPriceList) {
+			if("TRUE".equalsIgnoreCase(enableDebugFilter) && !debugStockNum.equals(oldPrice.getStockNum())) {
+				continue;
+			}
 			checkOldDateMap.put(oldPrice.getStockNum(), oldPrice.getStockDate());
 			checkDateSeqMap.put(oldPrice.getStockNum(), oldPrice.getStockDateSeq());
 		}
@@ -87,8 +101,12 @@ public class StockPriceService {
 							// Condition 2: Price Date is after latest valid date
 							if(oldPriceDate == null || newPrice.getStockDate().after(oldPriceDate)) {
 								Integer stockDateSeq = checkDateSeqMap.get(stockNum);
-								if(stockDateSeq == null) stockDateSeq = 1;
-								newPrice.setStockDateSeq(stockDateSeq++);
+								if(stockDateSeq == null) {
+									stockDateSeq = 1;
+								} else {
+									stockDateSeq++;
+								}
+								newPrice.setStockDateSeq(stockDateSeq);
 								insertList.add(newPrice);
 								checkDateSeqMap.put(stockNum, stockDateSeq);
 								updateCount++;

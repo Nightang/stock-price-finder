@@ -7,10 +7,12 @@ import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.nightang.db.stock.data.PatternResultMapper;
 import org.nightang.db.stock.data.StockAnalysisDataMapper;
 import org.nightang.db.stock.data.StockInfoMapper;
 import org.nightang.db.stock.data.StockPriceMapper;
 import org.nightang.db.stock.data.ext.StatisticDataMapper;
+import org.nightang.db.stock.model.PatternResultExample;
 import org.nightang.db.stock.model.StockAnalysisDataExample;
 import org.nightang.db.stock.model.StockInfo;
 import org.nightang.db.stock.model.StockInfoExample;
@@ -43,6 +45,9 @@ public class StockBO {
 	private StockPriceMapper stockPriceMapper;
 
 	@Autowired
+	private PatternResultMapper patternResultMapper;
+
+	@Autowired
 	private StatisticDataMapper statisticDataMapper;
 
 	@Autowired
@@ -53,16 +58,21 @@ public class StockBO {
 		long t = System.currentTimeMillis();
 		int deleteCount = 0;
 		for(Entry<String, Date> entry : stockNumVsDateMap.entrySet()) {
-			
-			// Delete Stock Price after the date in the map
-			StockPriceExample spExample = new StockPriceExample();
-			spExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
-			deleteCount += stockPriceMapper.deleteByExample(spExample);
+
+			// Delete Pattern Result after the date in the map
+			PatternResultExample prExample = new PatternResultExample();
+			prExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
+			patternResultMapper.deleteByExample(prExample);
 			
 			// Delete Stock Analyst Data after the date in the map
 			StockAnalysisDataExample saExample = new StockAnalysisDataExample();
 			saExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
 			stockAnalysisDataMapper.deleteByExample(saExample);
+			
+			// Delete Stock Price after the date in the map
+			StockPriceExample spExample = new StockPriceExample();
+			spExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
+			deleteCount += stockPriceMapper.deleteByExample(spExample);
 		}
 		log.info("Number of Stock Price Deleted: " + deleteCount + ", Duration(ms): " + (System.currentTimeMillis() - t));
 	}
