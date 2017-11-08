@@ -88,9 +88,9 @@
 		STOCK_PRICE sp1
 		left outer join STOCK_ANALYSIS_DATA sa1 on sp1.STOCK_NUM = sa1.STOCK_NUM and sp1.STOCK_DATE = sa1.STOCK_DATE and sa1.AD_TYPE = #{adType,jdbcType=VARCHAR}
 	where 
-		sp1.STOCK_DATE > #{effectiveDateStr,jdbcType=VARCHAR}
-		and sa1.STOCK_NUM is null
+		sa1.STOCK_NUM is null
 		and STOCK_DATE_SEQ >= #{maParam,jdbcType=INTEGER}
+		and STOCK_DATE_SEQ >= (select MAX(STOCK_DATE_SEQ) from STOCK_PRICE sp2 where sp2.STOCK_NUM = sp1.STOCK_NUM) - #{maRetention,jdbcType=INTEGER} 
   </insert>
   
   <delete id="deleteAllStockMA" parameterType="map">

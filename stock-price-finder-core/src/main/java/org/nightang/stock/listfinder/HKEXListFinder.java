@@ -47,7 +47,7 @@ public class HKEXListFinder implements AutoCloseable {
 			for(HKEXStockQueryItem item : q.getStocklist()) {
 				//log.info(item);
 				StockInfo stock = new StockInfo();
-				stock.setStockNum(item.getSym());
+				stock.setStockNum(paddingStockNum(item.getSym()));
 				stock.setChiName(item.getNm());
 				stock.setActive(!item.isSuspend());
 				if(item.getMktcap() != null && !"".equals(item.getMktcap())) {
@@ -57,7 +57,7 @@ public class HKEXListFinder implements AutoCloseable {
 				} else {
 					stock.setMktCap(null);
 				}				
-				map.put(item.getSym(), stock);
+				map.put(stock.getStockNum(), stock);
 			}
 			log.info("Total Size: " + q.getStocklist().size());
 		}
@@ -66,7 +66,7 @@ public class HKEXListFinder implements AutoCloseable {
 		q = retrieveStockData("eng", token);
 		if(q.getStocklist() != null) {
 			for(HKEXStockQueryItem item : q.getStocklist()) {
-				StockInfo stock = map.get(item.getSym());
+				StockInfo stock = map.get(paddingStockNum(item.getSym()));
 				if(stock != null) {
 					stock.setEngName(item.getNm());
 				}

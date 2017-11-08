@@ -15,7 +15,7 @@ public interface StatisticDataMapper {
 
     int insertAllStockMA(@Param("adType") String adType, @Param("maParam") int maParam);
 
-    int insertAllStockMAForNullOnly(@Param("adType") String adType, @Param("maParam") int maParam, @Param("effectiveDateStr") String effectiveDateStr);
+    int insertAllStockMAForNullOnly(@Param("adType") String adType, @Param("maParam") int maParam, @Param("maRetention") int maRetention);
 
     int deleteAllStockMA(@Param("adType") String adType, @Param("dayRange") String dayRange);
 

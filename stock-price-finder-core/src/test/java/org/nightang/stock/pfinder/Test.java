@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.nightang.db.stock.data.ext.StatisticDataMapper;
 import org.nightang.db.stock.model.StockInfo;
 import org.nightang.stock.listfinder.HKEXListFinder;
 import org.nightang.stock.service.StockBO;
@@ -30,6 +31,9 @@ public class Test {
 
 	@Autowired
 	private StockPriceService stockPriceService;
+
+	@Autowired
+	private StatisticDataMapper statisticDataMapper;
 
 	@Autowired
 	private StockBO stockBO;
@@ -55,13 +59,14 @@ public class Test {
 		//	log.info(list.size());
 		//}
 		
-		//stockListService.updateStockList();
+		stockListService.updateStockList();
 		
 		stockPriceService.updateStockPriceData();
 		
-		stockBO.housekeepStockDataMA();
+		//stockBO.housekeepStockDataMA();
 
-		stockBO.housekeepStockPrice();
+		//stockBO.housekeepStockPrice();
+		//statisticDataMapper.deleteAllStockMA("MA10", "20150101");
 	}
 	
 	public static void main(String[] args) throws Exception {		

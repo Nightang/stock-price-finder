@@ -91,8 +91,7 @@ public class StockBO {
 	public void updateAllStockMA(int maParam) {
 		long t = System.currentTimeMillis();
 		String adType = "MA" + maParam;
-		String effectiveDateStr = commonUtils.getDateDBStringBeforeToday(retentionDaysForStockDataMA);
-		int rs = statisticDataMapper.insertAllStockMAForNullOnly(adType, maParam, effectiveDateStr);
+		int rs = statisticDataMapper.insertAllStockMAForNullOnly(adType, maParam, retentionDaysForStockDataMA);
 		log.info("("+adType+") Inserted Number: " + rs + ", Duration(ms): " + (System.currentTimeMillis() - t));
 	}
 
