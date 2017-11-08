@@ -41,8 +41,9 @@ public class AAStockPriceFinder implements AutoCloseable {
 	public List<StockPrice> findPrices(String stockNum) throws IOException {
 		List<StockPrice> list = new ArrayList<StockPrice>();
 		
+		// Stock Number shuold be padded to 5 digit
 		String url = "http://chartdata1.internet.aastocks.com/servlet/iDataServlet/getdaily";
-		url += "?id="+stockNum+".HK&type=24&market=1&level=1&period=56&encoding=utf8";
+		url += "?id="+paddingStockNum(stockNum)+".HK&type=24&market=1&level=1&period=56&encoding=utf8";
 		String data = hw.doGet(url);
 		//log.info("RAW: " + data);
 		String[] dataSet = data.split("\\|");
@@ -83,4 +84,15 @@ public class AAStockPriceFinder implements AutoCloseable {
 		return list;
 	}
 
+	private String paddingStockNum(String str) {
+		String num = str;
+		if(num != null) {
+			if(num.length() < 5) {
+				for(int i = num.length(); i < 5; i++) {
+					num = "0" + num;
+				}
+			}
+		}
+		return num;
+	}
 }

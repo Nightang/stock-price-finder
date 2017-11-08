@@ -17,8 +17,12 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.nightang.db.stock.model.StockInfo;
+import org.nightang.stock.listfinder.HKEXStockQueryObject.HKEXStockQueryData;
+import org.nightang.stock.listfinder.HKEXStockQueryObject.HKEXStockQueryItem;
 import org.nightang.stock.pfinder.AAStockPriceFinder;
 import org.nightang.ws.HttpClientWrapper;
+
+import com.google.gson.Gson;
 
 public class HKEXListFinder implements AutoCloseable {
 	
@@ -34,7 +38,107 @@ public class HKEXListFinder implements AutoCloseable {
 	public void close() throws IOException {
 		hw.close();
 	}
+
+	public List<StockInfo> findStockList(String token) throws IOException {
+		Map<String, StockInfo> map = new HashMap<String, StockInfo>();
+		
+		HKEXStockQueryData q = retrieveStockData("chi", token);
+		if(q.getStocklist() != null) {
+			for(HKEXStockQueryItem item : q.getStocklist()) {
+				//log.info(item);
+				StockInfo stock = new StockInfo();
+				stock.setStockNum(item.getSym());
+				stock.setChiName(item.getNm());
+				stock.setActive(!item.isSuspend());
+				if(item.getMktcap() != null && !"".equals(item.getMktcap())) {
+					float cap = Float.parseFloat(item.getMktcap().replace(",", ""));
+					// Uuit for MktCap should be M
+					stock.setMktCap("B".equalsIgnoreCase(item.getMktcap_u()) ? (long) cap*1000 : (long) cap);
+				} else {
+					stock.setMktCap(null);
+				}				
+				map.put(item.getSym(), stock);
+			}
+			log.info("Total Size: " + q.getStocklist().size());
+		}
+		
+		// Update English Name
+		q = retrieveStockData("eng", token);
+		if(q.getStocklist() != null) {
+			for(HKEXStockQueryItem item : q.getStocklist()) {
+				StockInfo stock = map.get(item.getSym());
+				if(stock != null) {
+					stock.setEngName(item.getNm());
+				}
+			}
+		}
+		
+		updateHSIFlag(map);		
+		
+		return convertMapToList(map);
+	}
 	
+	private List<StockInfo> convertMapToList(Map<String, StockInfo> map) {
+		List<StockInfo> list = new ArrayList<StockInfo>();
+		for(Entry<String, StockInfo> entry : map.entrySet()) {
+			list.add(entry.getValue());			
+		}
+		list.sort(new Comparator<StockInfo>() {
+			@Override
+			public int compare(StockInfo arg0, StockInfo arg1) {
+				return arg0.getStockNum().compareTo(arg1.getStockNum());
+			}			
+		});		
+		return list;
+	}
+
+	private HKEXStockQueryData retrieveStockData(String lang, String token) throws IOException {
+		// **Token Chrome -> F12 (Debug Tool) -> Go to
+		// https://www.hkex.com.hk/Market-Data/Securities-Prices/Equities?sc_lang=zh-HK
+		// Found last JS Request -> In Request Header -> Get token="xxxxxx"
+		
+		String url = "http://www1.hkex.com.hk/hkexwidget/data/getequityfilter"
+				+ "?lang=" + lang
+				+ "&token=" + token	          
+				+ "&subcat=1&market=MAIN&sort=0&order=1&all=1"
+				+ "";
+		String dataStr = hw.doGet(url);
+		//log.info(dataStr);
+		
+		Gson gson = new Gson();
+		HKEXStockQueryObject data = gson.fromJson(dataStr, HKEXStockQueryObject.class);
+		return data.getData();
+	}
+
+	private void updateHSIFlag(Map<String, StockInfo> map) throws IOException {
+		String url = "https://www.hsi.com.hk/HSI-Net/HSI-Net?cmd=nxgenindex&index=00001&code=HSI";
+		String data = hw.doGet(url);
+		//log.info("RAW: " + data);
+		// Format: hcode="1"
+		String pStr = "hcode=\"(\\d+)\"";
+		Pattern p = Pattern.compile(pStr);
+		Matcher m = p.matcher(data);
+		Set<String> hsiSet = new HashSet<String>();
+		while (m.find()) {
+			MatchResult mr = m.toMatchResult();	
+			String stockNum = paddingStockNum(mr.group(1));
+			if(!hsiSet.contains(stockNum)) {
+				hsiSet.add(stockNum);
+			}
+		}
+		log.info("Number of HSI Stock: "+hsiSet.size());
+
+		for(Entry<String, StockInfo> entry : map.entrySet()) {
+			StockInfo record = entry.getValue();
+			if(hsiSet.contains(record.getStockNum())) {
+				record.setIsHsi(true);
+			} else {
+				record.setIsHsi(false);				
+			}			
+		}
+	}
+	
+	/*
 	public List<StockInfo> findStockList() throws IOException {
 		Map<String, StockInfo> map = new HashMap<String, StockInfo>();
 		
@@ -66,23 +170,25 @@ public class HKEXListFinder implements AutoCloseable {
 		
 		return list;
 	}
+	*/
 	
+	/*
 	private void buildStockList(Map<String, StockInfo> map) throws IOException {
 		String url = "http://www.hkex.com.hk/eng/market/sec_tradinfo/stockcode/eisdeqty.htm";
 		String data = hw.doGet(url);
 		//log.info("RAW: " + data);
-		/*
-		 * 	Sample:
-			<tr class="tr_normal">
-               	<td class="verd_black12" width="18%">03813</td>
-               	<td class="verd_black12" width="42%"><a href="../../../invest/company/profile_page_e.asp?WidCoID=03813&WidCoAbbName=&Month=&langcode=e" target="_parent">POU SHENG INT'L</a></td>
-               	<td class="verd_black12" width="19%">1,000</td>
-               	<td class="verd_black12" width="3%" align="center">#</td>
-               	<td class="verd_black12" width="3%">H</td>
-               	<td class="verd_black12" width="3%">O</td>
-               	<td class="verd_black12" width="3%">&nbsp;</td>
-               </tr>
-		 */
+		//
+		// 	Sample:
+		//	<tr class="tr_normal">
+        //       	<td class="verd_black12" width="18%">03813</td>
+        //       	<td class="verd_black12" width="42%"><a href="../../../invest/company/profile_page_e.asp?WidCoID=03813&WidCoAbbName=&Month=&langcode=e" target="_parent">POU SHENG INT'L</a></td>
+        //       	<td class="verd_black12" width="19%">1,000</td>
+        //       	<td class="verd_black12" width="3%" align="center">#</td>
+        //       	<td class="verd_black12" width="3%">H</td>
+        //       	<td class="verd_black12" width="3%">O</td>
+        //       	<td class="verd_black12" width="3%">&nbsp;</td>
+        //       </tr>
+		//
 		String pStr = "<td[^>]*>" + "(\\d{5})" + "</td>\\s*"
 					+ "<td[^>]*><a[^>]*>" + "([^<]*)" + "</a></td>\\s*"
 					+ "<td[^>]*>" + "([^<]*)" + "</td>\\s*";
@@ -100,7 +206,9 @@ public class HKEXListFinder implements AutoCloseable {
 		}
 		log.info("Number of Stocks: " + map.size());			
 	}
-
+	*/
+	
+	/*
 	private void updateChiName(Map<String, StockInfo> map) throws IOException {
 		String url = "http://www.hkex.com.hk/chi/market/sec_tradinfo/stockcode/eisdeqty_c.htm";
 		String data = hw.doGet(url);
@@ -121,35 +229,9 @@ public class HKEXListFinder implements AutoCloseable {
 			}
 		}
 	}
-	
-	private void updateHSIFlag(Map<String, StockInfo> map) throws IOException {
-		String url = "https://www.hsi.com.hk/HSI-Net/HSI-Net?cmd=nxgenindex&index=00001&code=HSI";
-		String data = hw.doGet(url);
-		//log.info("RAW: " + data);
-		// Format: hcode="1"
-		String pStr = "hcode=\"(\\d+)\"";
-		Pattern p = Pattern.compile(pStr);
-		Matcher m = p.matcher(data);
-		Set<String> hsiSet = new HashSet<String>();
-		while (m.find()) {
-			MatchResult mr = m.toMatchResult();	
-			String stockNum = paddingStockNum(mr.group(1));
-			if(!hsiSet.contains(stockNum)) {
-				hsiSet.add(stockNum);
-			}
-		}
-		log.info("hsiSet.size()> "+hsiSet.size());
-
-		for(Entry<String, StockInfo> entry : map.entrySet()) {
-			StockInfo record = entry.getValue();
-			if(hsiSet.contains(record.getStockNum())) {
-				record.setIsHsi(true);
-			} else {
-				record.setIsHsi(false);				
-			}			
-		}
-	}
-
+	*/
+		
+	/*
 	private void updateMarketCap(Map<String, StockInfo> map) throws IOException {
 		int pageCount = 1;
 		int pageSize = -1;
@@ -199,7 +281,8 @@ public class HKEXListFinder implements AutoCloseable {
 		}
 		
 	}
-
+	*/
+	
 	/*
 	private void updateMarketCapFromHKEXProfile(Map<String, StockInfo> map) throws IOException {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");

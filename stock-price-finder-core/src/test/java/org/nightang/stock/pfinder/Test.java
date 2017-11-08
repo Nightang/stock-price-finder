@@ -50,17 +50,18 @@ public class Test {
 		//}
 		
 		//try(HKEXListFinder finder = new HKEXListFinder()) {
-			//List<StockInfo> list = finder.findStockList();
-			//log.info(list.size());
+		//	List<StockInfo> list = finder.findStockList(
+		//			"evLtsLsBNAUVTPxtGqVeG%2bGfXgyPL3dtBGplqEepCMdX1KxZDr5lSutVtP%2fuc5UY");
+		//	log.info(list.size());
 		//}
 		
-		stockListService.updateStockList();
+		//stockListService.updateStockList();
 		
 		stockPriceService.updateStockPriceData();
 		
-		//stockBO.housekeepStockDataMA();
+		stockBO.housekeepStockDataMA();
 
-		//stockBO.housekeepStockPrice();
+		stockBO.housekeepStockPrice();
 	}
 	
 	public static void main(String[] args) throws Exception {		

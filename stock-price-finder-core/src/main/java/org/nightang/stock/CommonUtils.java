@@ -14,7 +14,7 @@ public class CommonUtils {
 	
 	public Date getDateBeforeToday(int daysDiff) {
 		Calendar cal = GregorianCalendar.getInstance();
-		cal.set(Calendar.DAY_OF_YEAR, -daysDiff);
+		cal.set(Calendar.DATE, -daysDiff);
 		return cal.getTime();
 	}
 

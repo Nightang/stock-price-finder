@@ -23,16 +23,21 @@ public class StockPriceFinderLauncher {
 	@Autowired
 	private StockPriceService stockPriceService;
 	
-	public void doTask() throws IOException, GeneralSecurityException {
-		stockListService.updateStockList();		
-		stockPriceService.updateStockPriceData();		
+	public void doTask(String[] args) throws IOException, GeneralSecurityException {
+		for(String arg : args) {
+			if("updateList".equals(arg)) {
+				stockListService.updateStockList();
+			} else if("updatePrice".equals(arg)) {
+				stockPriceService.updateStockPriceData();
+			}
+		}		
 	}
 
 	public static void main(String[] args) throws IOException, GeneralSecurityException {
 		try {
 			ApplicationContext context = (ApplicationContext) new ClassPathXmlApplicationContext("context-application.xml");
 			StockPriceFinderLauncher launcher = (StockPriceFinderLauncher) context.getBean("stockPriceFinderLauncher");
-			launcher.doTask();
+			launcher.doTask(args);
 		} catch(Exception e) {
 			log.error(e, e);
 		}
