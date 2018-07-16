@@ -54,29 +54,44 @@ public class StockBO {
 	private StockAnalysisDataMapper stockAnalysisDataMapper;
 	
 	@Transactional
-	public void deleteStockDataAfterDateMap(Map<String, Date> stockNumVsDateMap) {
+	public void deleteStockPricesAfterMapData(Map<String, StockPrice> stockPricesMap) {
 		long t = System.currentTimeMillis();
 		int deleteCount = 0;
-		for(Entry<String, Date> entry : stockNumVsDateMap.entrySet()) {
-
+		for(Entry<String, StockPrice> entry : stockPricesMap.entrySet()) {
+			String stockNum = entry.getKey();
+			StockPrice sp = entry.getValue();
+			
 			// Delete Pattern Result after the date in the map
 			PatternResultExample prExample = new PatternResultExample();
-			prExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
+			if(sp != null) {
+				prExample.createCriteria().andStockNumEqualTo(stockNum).andStockDateGreaterThan(sp.getStockDate());
+			} else {
+				prExample.createCriteria().andStockNumEqualTo(stockNum);
+			}
 			patternResultMapper.deleteByExample(prExample);
 			
 			// Delete Stock Analyst Data after the date in the map
 			StockAnalysisDataExample saExample = new StockAnalysisDataExample();
-			saExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
+			if(sp != null) {
+				saExample.createCriteria().andStockNumEqualTo(stockNum).andStockDateGreaterThan(sp.getStockDate());
+			} else {
+				saExample.createCriteria().andStockNumEqualTo(stockNum);
+			}
 			stockAnalysisDataMapper.deleteByExample(saExample);
 			
 			// Delete Stock Price after the date in the map
 			StockPriceExample spExample = new StockPriceExample();
-			spExample.createCriteria().andStockNumEqualTo(entry.getKey()).andStockDateGreaterThan(entry.getValue());
+			if(sp != null) {
+				spExample.createCriteria().andStockNumEqualTo(stockNum).andStockDateGreaterThan(sp.getStockDate());
+			} else {
+				spExample.createCriteria().andStockNumEqualTo(stockNum);				
+			}
+			
 			deleteCount += stockPriceMapper.deleteByExample(spExample);
 		}
 		log.info("Number of Stock Price Deleted: " + deleteCount + ", Duration(ms): " + (System.currentTimeMillis() - t));
 	}
-
+	
 	@Transactional
 	public void insertStockPrice(List<StockPrice> insertList) {
 		long t = System.currentTimeMillis();

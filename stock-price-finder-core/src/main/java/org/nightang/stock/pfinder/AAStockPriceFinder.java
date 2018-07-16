@@ -7,7 +7,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,8 +24,17 @@ public class AAStockPriceFinder implements AutoCloseable {
 	
 	private SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
 	
-	public AAStockPriceFinder() throws GeneralSecurityException, IOException {
+	private String dataMode;
+	
+	private static final Map<String, String> AA_DATA_MODE_MAP = new HashMap<String, String>();
+	static {
+		AA_DATA_MODE_MAP.put("D", "56");
+		AA_DATA_MODE_MAP.put("M", "68");
+	}
+	
+	public AAStockPriceFinder(String dataMode) throws GeneralSecurityException, IOException {
 		hw = new HttpClientWrapper("network.ini", null, null);
+		this.dataMode = dataMode;
 	}
 
 	@Override
@@ -31,19 +42,13 @@ public class AAStockPriceFinder implements AutoCloseable {
 		hw.close();
 	}
 	
-	public void test() throws IOException {
-		String url = "http://chartdata1.internet.aastocks.com/servlet/iDataServlet/getdaily";
-		url += "?id=00939.HK&type=24&market=1&level=1&period=56&encoding=utf8";
-		String data = hw.doGet(url);
-		log.info("RAW: " + data);
-	}
-	
 	public List<StockPrice> findPrices(String stockNum) throws IOException {
 		List<StockPrice> list = new ArrayList<StockPrice>();
 		
 		// Stock Number shuold be padded to 5 digit
 		String url = "http://chartdata1.internet.aastocks.com/servlet/iDataServlet/getdaily";
-		url += "?id="+paddingStockNum(stockNum)+".HK&type=24&market=1&level=1&period=56&encoding=utf8";
+		url += "?id="+paddingStockNum(stockNum)+".HK&type=24&market=1&level=1"
+				+ "&period="+AA_DATA_MODE_MAP.get(dataMode)+"&encoding=utf8";
 		String data = hw.doGet(url);
 		//log.info("RAW: " + data);
 		String[] dataSet = data.split("\\|");
@@ -70,7 +75,7 @@ public class AAStockPriceFinder implements AutoCloseable {
 				sp.setLastModifiedDate(now);
 				list.add(sp);
 			} catch (ParseException e) {
-				log.error("Fail Parse: ["+i+"][" + dataSet[i] + "]", e);
+				log.warn("Fail Parse: ["+i+"][" + dataSet[i] + "]");
 			}
 		}
 		list.sort(new Comparator<StockPrice>() {

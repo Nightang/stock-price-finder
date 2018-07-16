@@ -28,7 +28,7 @@ public class DateToTextTypeHandler extends BaseTypeHandler<Date> {
 				return sdf.parse(arg0.getString(arg1));				
 			}
 		} catch (ParseException e) {
-			System.err.println("Fail to convert Date Field");
+			System.err.println("Fail to convert Date Field: " + e.getMessage());
 		}
 		return null;
 	}
@@ -40,7 +40,7 @@ public class DateToTextTypeHandler extends BaseTypeHandler<Date> {
 				return sdf.parse(arg0.getString(arg1));				
 			}
 		} catch (ParseException e) {
-			System.err.println("Fail to convert Date Field");
+			System.err.println("Fail to convert Date Field: " + e.getMessage());
 		}
 		return null;
 	}
@@ -52,7 +52,7 @@ public class DateToTextTypeHandler extends BaseTypeHandler<Date> {
 				return sdf.parse(arg0.getString(arg1));				
 			}
 		} catch (ParseException e) {
-			System.err.println("Fail to convert Date Field");
+			System.err.println("Fail to convert Date Field: " + e.getMessage());
 		}
 		return null;
 	}

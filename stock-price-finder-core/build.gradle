@@ -80,7 +80,7 @@ task copyDefaultConfig(type: Copy) {
 	from "config_dist/database.db"
     from "config_dist/app_config.ini"
     from "config_dist/network.ini"
-    from "config_dist/run_update_stock_list.bat"
+    from "config_dist/run_update_stock_info.bat"
     from "config_dist/run_update_stock_price.bat"
     // Determine the destination directory later
     into { docs }

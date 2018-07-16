@@ -99,11 +99,15 @@ public class HKEXListFinder implements AutoCloseable {
 		
 		String url = "http://www1.hkex.com.hk/hkexwidget/data/getequityfilter"
 				+ "?lang=" + lang
-				+ "&token=" + token	          
-				+ "&subcat=1&market=MAIN&sort=0&order=1&all=1"
-				+ "";
+				//+ "&token=" + token	          
+				//+ "&subcat=1&market=MAIN&sort=0&order=1&all=1"
+				//+ "";
+				+ "&token=evLtsLsBNAUVTPxtGqVeG06gch2S39wR7OjTjSEW5cPu3WO%2f3yxpnkquE5vkI%2fVO&qid=1531469586312&callback=jQuery311022326063742440838_1531469451337&_=1531469451340";
 		String dataStr = hw.doGet(url);
-		//log.info(dataStr);
+		log.info(dataStr);
+		dataStr = dataStr.substring(dataStr.indexOf("(")+1);
+		dataStr = dataStr.substring(0, dataStr.length() - 1);
+		log.info(dataStr);
 		
 		Gson gson = new Gson();
 		HKEXStockQueryObject data = gson.fromJson(dataStr, HKEXStockQueryObject.class);

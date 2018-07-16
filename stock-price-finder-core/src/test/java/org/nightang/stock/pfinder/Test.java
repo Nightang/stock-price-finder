@@ -8,8 +8,10 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.nightang.db.stock.data.StockInfoMapper;
 import org.nightang.db.stock.data.ext.StatisticDataMapper;
 import org.nightang.db.stock.model.StockInfo;
+import org.nightang.db.stock.model.StockInfoExample;
 import org.nightang.stock.listfinder.HKEXListFinder;
 import org.nightang.stock.service.StockBO;
 import org.nightang.stock.service.StockListService;
@@ -37,6 +39,9 @@ public class Test {
 
 	@Autowired
 	private StockBO stockBO;
+
+	@Autowired
+	private StockInfoMapper stockInfoMapper;
 	
 	public void doTest() throws Exception {
 //		HttpClientWrapper hw = new HttpClientWrapper("network.ini", null, null);
@@ -49,7 +54,7 @@ public class Test {
 //		
 		//log.info("Test !!!");
 
-		//try(AAStockPriceFinder finder = new AAStockPriceFinder()) {
+		//try(AAStockPriceFinder finder = new AAStockPriceFinder("M")) {
 		//	finder.test();
 		//}
 		
@@ -59,14 +64,27 @@ public class Test {
 		//	log.info(list.size());
 		//}
 		
-		stockListService.updateStockList();
+		//try (AAStockInfoFinder finder = new AAStockInfoFinder()) {
+		//	finder.findInfo("939");
+		//}
+		
+		//stockListService.updateStockList();
 		
 		stockPriceService.updateStockPriceData();
+		
+		//stockPriceService.verifyAvaliableDBData(null);
 		
 		//stockBO.housekeepStockDataMA();
 
 		//stockBO.housekeepStockPrice();
 		//statisticDataMapper.deleteAllStockMA("MA10", "20150101");
+		
+//		StockInfoExample example = new StockInfoExample();
+//		example.createCriteria().andStockNumEqualTo("00939");
+//		List<StockInfo> list = stockInfoMapper.selectByExample(example);
+//		StockInfo info = list.get(0);
+//		info.setActive(true);
+//		stockInfoMapper.updateByExample(info, example);
 	}
 	
 	public static void main(String[] args) throws Exception {		
